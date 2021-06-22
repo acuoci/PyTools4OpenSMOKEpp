@@ -99,3 +99,4 @@ for i in range(len(list_xml_files)):
 
 # Write single XML file
 WriteXMLFile("data.xml", kinetics, simulations)
+
