@@ -57,8 +57,9 @@ def WriteXMLFile(output_file, kinetics, simulations):
     f.close()
     
 
-# Import kinetic mechanism in XML format
-kin_xml_folder_name="C:\\Users\\acuoci\\OneDrive - Politecnico di Milano\\My Projects\\GitHub\\CRECK_DiscreteSectionalModel_v2012\\CRECK_2012_Soot_OnlyBINJ_NoHeavyFuels\\kinetics-CRECK_2012_SootOnlyBINJ-SP-AGG\\"
+# Official CRECK2012 Soot BINJOnly (no heavy fuels version)
+folder_github = "C:\\Users\\acuoci\\OneDrive - Politecnico di Milano\\My Projects\\GitHub\\"
+kin_xml_folder_name=folder_github + "CRECK_DiscreteSectionalModel_v2012\\CRECK_2012_Soot_OnlyBINJ_NoHeavyFuels\\kinetics-CRECK_2012_SootOnlyBINJ-SP-AGG\\"
 kinetics = KineticMechanism(kin_xml_folder_name + "kinetics.xml")
 
 

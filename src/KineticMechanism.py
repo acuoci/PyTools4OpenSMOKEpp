@@ -65,96 +65,6 @@ class KineticMechanism:
     
     # Species molecular weights
     mws = atomic.dot(mwe)
-    
-    # List of PAHs (1-2 rings)
-    pah12_list = []
-    pah12_list.append('C6H6')
-    pah12_list.append('C7H8')
-    pah12_list.append('INDENE')
-    pah12_list.append('C10H8')
-    pah12_list.append('C12H8')
-    pah12_list.append('BIPHENYL')
-    pah12_list.append('FLUORENE')
-    pah12_list.append('C6H5C2H')
-    pah12_list.append('C6H5C2H3')
-    pah12_list.append('C6H5C2H5')
-    pah12_list.append('C10H7CH3')
-    pah12_list.append('C6H5')
-    pah12_list.append('C7H7')
-    pah12_list.append('C10H7')
-    pah12_list.append('C12H7')
-    pah12_list.append('C12H9')
-    pah12_list.append('CH3C6H4')
-    pah12_list.append('C6H4C2H')
-    pah12_list.append('C6H5C2H2')
-    pah12_list.append('C10H7CH2')
-    pah12_list.append('C10H6CH3')
-    pah12_list.append('XYLENE')
-    pah12_list.append('RXYLENE')
-    pah12_list.append('INDENYL')
-    
-    pah12_indices = []
-    pah12_mws = []
-    for pah12 in pah12_list:
-        if (pah12 in species):
-            pah12_indices.append(species.index(pah12))
-            pah12_mws.append(mws[species.index(pah12)])
-
-
-    # List of PAHs (3-4 rings)
-    pah34_list = []
-    pah34_list.append('C14H10')
-    pah34_list.append('C16H10')
-    pah34_list.append('C18H10')
-    pah34_list.append('C18H14')
-    pah34_list.append('C14H9')
-    pah34_list.append('C16H9')
-    pah34_list.append('C18H9')
-    pah34_list.append('C6H5C2H4C6H5')
-    pah34_list.append('C6H5CH2C6H5')
-
-    pah34_indices = []
-    pah34_mws = []
-    for pah34 in pah34_list:
-        if (pah34 in species):
-            pah34_indices.append(species.index(pah34))
-            pah34_mws.append(mws[species.index(pah34)])
-            
-            
-    # Large precursors (BIN1-BIN4)
-    pahlp_list = []
-    pahlp_indices = []
-    pahlp_mws = []
-    for name in species:
-        if re.match("BIN[1234][ABC]", name):
-            pahlp_list.append(name)
-            pahlp_indices.append(species.index(name))
-            pahlp_mws.append(mws[species.index(name)])
-        elif re.match("BIN[1234][ABC]J", name):
-            pahlp_list.append(name)
-            pahlp_indices.append(species.index(name))
-            pahlp_mws.append(mws[species.index(name)])
-            
-    # Spherical particles (BIN5-BIN12)
-    sp_list = []
-    sp_indices = []
-    sp_mws = []
-    for name in species:
-        if (re.match("BIN[56789].", name) or re.match("BIN1[012].", name) ) :
-            sp_list.append(name)
-            sp_indices.append(species.index(name))
-            sp_mws.append(mws[species.index(name)])
-         
-    # Aggregates (BIN13-BIN25, fractal diameter 1.8)
-    agg_list = []
-    agg_indices = []
-    agg_mws = []
-    for name in species:
-        if (re.match("BIN2[0123456789].", name) or (re.match("BIN1[3456789].", name)) ) :
-            agg_list.append(name)
-            agg_indices.append(species.index(name))
-            agg_mws.append(mws[species.index(name)])
-            
             
     # Soot classes (if they exists)
     reaction_class_name = []
@@ -182,6 +92,23 @@ class KineticMechanism:
         self.reaction_class_size = []
         self.reaction_class_indices = []
         
+    # Kinetic parameters
+    kinetic_parameters = kinetics.find('KineticParameters')
+    direct = kinetic_parameters.find('Direct')
+    
+    lnA = direct.find('lnA')
+    lnA = (lnA.text).split()
+    lnA = np.float64(lnA[1:])
+    A = np.exp(lnA)
+    
+    Beta = direct.find('Beta')
+    Beta = (Beta.text).split()
+    Beta = np.float64(Beta[1:])
+    
+    E_over_R = direct.find('E_over_R')
+    E_over_R = (E_over_R.text).split()
+    E_over_R = np.float64(E_over_R[1:])
+
     
     # Assign internal members
     
@@ -199,26 +126,37 @@ class KineticMechanism:
     self.mwe = mwe
     self.mws = mws
     
-    self.pah12_list = pah12_list
-    self.pah12_indices = pah12_indices
-    self.pah12_mws = pah12_mws
+    self.groups = []
+
+    self.A = A
+    self.Beta = Beta
+    self.E_over_R = E_over_R
     
-    self.pah34_list = pah34_list
-    self.pah34_indices = pah34_indices
-    self.pah34_mws = pah34_mws    
-
-    self.pahlp_list = pahlp_list
-    self.pahlp_indices = pahlp_indices
-    self.pahlp_mws = pahlp_mws 
-
-    self.sp_list = sp_list
-    self.sp_indices = sp_indices
-    self.sp_mws = sp_mws   
-
-    self.agg_list = agg_list
-    self.agg_indices = agg_indices
-    self.agg_mws = agg_mws    
+    self.reactions = []
     
+    
+  def AddGroupOfSpecies(self, name, description, species_list):
+  
+    indices = []
+    mws = []
+    for s in species_list:
+        if (s in self.species):
+            indices.append(self.species.index(s))
+            mws.append(self.mws[self.species.index(s)])
+
+    # Define group
+    group_definition = { 'name': name, 'description': description, 'list': species_list, 'indices': indices, 'mws': mws }
+
+    # Append group
+    self.groups.append( group_definition );
+   
+   
+  def Group(self, name):
+  
+    for i in range(len(self.groups)):
+        if (name == self.groups[i]['name']): return self.groups[i]
+    
+
     
   def ReadKinetics(self, xml_file_name):
   
@@ -288,6 +226,36 @@ class KineticMechanism:
         for i in range(len(self.reaction_class_indices[k])):
             self.reaction_class_belonging[ self.reaction_class_indices[k][i] ] = k
     
+    
+  def ProcessingReactions(self):
+    
+    for i in range(self.nr):
+
+        if (i%1000 == 0):
+            print('Processing reactions ', i)
+
+        ir = sparse.find(self.nur.getrow(i))[1]
+        nur = sparse.find(self.nur.getrow(i))[2]
+        if (len(ir)==1 and nur[0] == 2.):
+            ir = [ir[0], ir[0]]
+            nur = [1.,1.]
+        react = [ self.species[i] for i in ir ] 
+
+        ip = sparse.find(self.nup.getrow(i))[1]
+        nup = sparse.find(self.nup.getrow(i))[2]
+        if (len(ip)==1 and nup[0] == 2.):
+            ip = [ip[0], ip[0]]
+            nup = [1.,1.]
+        prod = [self.species[i] for i in ip]    
+
+        reaction = {    'index': i, \
+                        'react': react, 'ir': ir, 'nur': nur, \
+                        'prod': prod, 'ip': ip, 'nup': nup, \
+                        'A': self.A[i], 'Beta': self.Beta[i], 'E_over_R': self.E_over_R[i] 
+                   }
+
+        self.reactions.append(reaction)
+  
   
   def ReactionsWithSpecies(self, species_name, flag):
     
@@ -520,15 +488,15 @@ class KineticMechanism:
   def PartitionSootPrecursorReactions(self, pah_species):
   
     # Recognize family
-    if (pah_species in self.pahlp_list): pah_family = 'PAHLP'
-    elif (pah_species in self.pah34_list): pah_family = 'PAH34'
-    elif (pah_species in self.pah12_list): pah_family = 'PAH12'
+    if (pah_species in self.Group('PAHLP')['list']): pah_family = 'PAHLP'
+    elif (pah_species in self.Group('PAH34')['list']): pah_family = 'PAH34'
+    elif (pah_species in self.Group('PAH12')['list']): pah_family = 'PAH12'
     
     # All the reactions in which the species is involved
     selected_all = self.ReactionsWithSpecies(pah_species, 'RP')
     
     # All the reactions in which the PAH is involved together with spherical particles and agrregates
-    list_of_species = self.sp_list + self.agg_list
+    list_of_species = self.Group('SP')['list'] + self.Group('AGG')['list']
     selected_sp_agg = self.ReactionsWithListsOfSpecies( pah_species, 'RP', list_of_species, ["RP"]*len(list_of_species), "AND" )
     selected_gas_pah12_pah34_pahlp = list(set(selected_all) - set(selected_sp_agg))
     if ( len(selected_all) != len(selected_gas_pah12_pah34_pahlp) + len(selected_sp_agg) ):
@@ -536,7 +504,7 @@ class KineticMechanism:
         sys.exit("PartitionSootPrecursorsReactions failure at decomposition: ALL = GAS-PAH12-PAH34-PAHLP + SP-AGG!")
     
     # All the reactions in which the PAH is involved together with PAHLP
-    list_of_species = self.pahlp_list
+    list_of_species = self.Group('PAHLP')['list']
     if (pah_family == 'PAHLP'): list_of_species = list(set(list_of_species) - set([pah_species]))
     selected_pahlp = self.SubReactionsWithListsOfSpecies( pah_species, 'RP', list_of_species, ["RP"]*len(list_of_species), selected_gas_pah12_pah34_pahlp, "AND" )
     selected_gas_pah12_pah34 = list(set(selected_gas_pah12_pah34_pahlp) - set(selected_pahlp))
@@ -545,7 +513,7 @@ class KineticMechanism:
         sys.exit("PartitionSootPrecursorsReactions failure at decomposition: GAS-PAH12-PAH34-PAHLP = GAS-PAH12-PAH34 + PAHLP!")    
     
     # All the reactions in which the PAH is involved together with PAH34
-    list_of_species = self.pah34_list
+    list_of_species = self.Group('PAH34')['list']
     if (pah_family == 'PAH34'): list_of_species = list(set(list_of_species) - set([pah_species]))
     selected_pah34 = self.SubReactionsWithListsOfSpecies( pah_species, 'RP', list_of_species, ["RP"]*len(list_of_species), selected_gas_pah12_pah34, "AND" )
     selected_gas_pah12 = list(set(selected_gas_pah12_pah34) - set(selected_pah34))
@@ -554,7 +522,7 @@ class KineticMechanism:
         sys.exit("PartitionSootPrecursorsReactions failure at decomposition: GAS-PAH12-PAH34 = GAS-PAH12 + PAH34!")    
         
     # All the reactions in which the PAH is involved together with PAH34
-    list_of_species = self.pah12_list
+    list_of_species = self.Group('PAH12')['list']
     if (pah_family == 'PAH12'): list_of_species = list(set(list_of_species) - set([pah_species]))
     selected_pah12 = self.SubReactionsWithListsOfSpecies( pah_species, 'RP', list_of_species, ["RP"]*len(list_of_species), selected_gas_pah12, "AND" )
     selected_gas = list(set(selected_gas_pah12) - set(selected_pah12))
@@ -639,9 +607,9 @@ class KineticMechanism:
     pahs34 = []
     pahs12 = []
     for i in range(len(list_of_pahs)):
-        if   ( list_of_pahs[i] in self.pahlp_list):   pahslp.append(list_of_pahs[i])
-        elif ( list_of_pahs[i] in self.pah34_list):   pahs34.append(list_of_pahs[i])
-        elif ( list_of_pahs[i] in self.pah12_list):   pahs12.append(list_of_pahs[i])
+        if   ( list_of_pahs[i] in self.Group('PAHLP')['list']):   pahslp.append(list_of_pahs[i])
+        elif ( list_of_pahs[i] in self.Group('PAH34')['list']):   pahs34.append(list_of_pahs[i])
+        elif ( list_of_pahs[i] in self.Group('PAH12')['list']):   pahs12.append(list_of_pahs[i])
    
     reactions_pahlp = (np.unique( self.SubReactionsWithMultipleSpecies(pahslp, ['RP']*len(pahslp), indices, 'OR') )).tolist()
     indices_minus_pahlp = list(set(indices)-set(reactions_pahlp))
@@ -654,17 +622,17 @@ class KineticMechanism:
     
   def SplitPAHsSphericalAggregatesReactions(self, indices):
   
-    reactions_agg = (np.unique( self.SubReactionsWithMultipleSpecies(self.agg_list, ['RP']*len(self.agg_list), indices, 'OR') )).tolist()
+    reactions_agg = (np.unique( self.SubReactionsWithMultipleSpecies(self.Group('AGG')['list'], ['RP']*len(self.Group('AGG')['list']), indices, 'OR') )).tolist()
     indices_minus_agg = list(set(indices)-set(reactions_agg))
-    reactions_sp = (np.unique( self.SubReactionsWithMultipleSpecies(self.sp_list, ['RP']*len(self.sp_list), indices_minus_agg, 'OR') )).tolist()
+    reactions_sp = (np.unique( self.SubReactionsWithMultipleSpecies(self.Group('SP')['list'], ['RP']*len(self.Group('SP')['list']), indices_minus_agg, 'OR') )).tolist()
     
     return reactions_sp, reactions_agg
     
     
   def SplitSphericalAggregatesReactions(self, indices):
   
-    reactions_sp = (np.unique( self.SubReactionsWithMultipleSpecies(self.sp_list, ['RP']*len(self.sp_list), indices, 'OR') )).tolist()
-    reactions_sp_agg = (np.unique( self.SubReactionsWithMultipleSpecies(self.agg_list, ['RP']*len(self.agg_list), reactions_sp, 'OR') )).tolist()
+    reactions_sp = (np.unique( self.SubReactionsWithMultipleSpecies(self.Group('SP')['list'], ['RP']*len(self.Group('SP')['list']), indices, 'OR') )).tolist()
+    reactions_sp_agg = (np.unique( self.SubReactionsWithMultipleSpecies(self.Group('AGG')['list'], ['RP']*len(self.Group('AGG')['list']), reactions_sp, 'OR') )).tolist()
     reactions_sp_only = list(set(reactions_sp)-set(reactions_sp_agg))
     reactions_agg_only = list(set(indices)-set(reactions_sp))
     
@@ -990,37 +958,37 @@ class KineticMechanism:
     
     # PAHs12
     pahs12 = []
-    for i in range(len(self.pah12_list)):
-        if (self.pah12_list[i] in species_gas): 
-            pahs12.append(self.pah12_list[i])       
+    for i in range(len(self.Group('PAH12')['list'])):
+        if (self.Group('PAH12')['list'][i] in species_gas): 
+            pahs12.append(self.Group('PAH12')['list'][i])       
     species_gas = list(set(species_gas) - set(pahs12))
         
     # PAHs34
     pahs34 = []
-    for i in range(len(self.pah34_list)):
-        if (self.pah34_list[i] in species_gas): 
-            pahs34.append(self.pah34_list[i])
+    for i in range(len(self.Group('PAH34')['list'])):
+        if (self.Group('PAH34')['list'][i] in species_gas): 
+            pahs34.append(self.Group('PAH34')['list'][i])
     species_gas = list(set(species_gas) - set(pahs34))
     
     # PAHsLP
     pahslp = []
-    for i in range(len(self.pahlp_list)):
-        if (self.pahlp_list[i] in species_gas): 
-            pahslp.append(self.pahlp_list[i])
+    for i in range(len(self.Group('PAHLP')['list'])):
+        if (self.Group('PAHLP')['list'][i] in species_gas): 
+            pahslp.append(self.Group('PAHLP')['list'][i])
     species_gas = list(set(species_gas) - set(pahslp))   
 
     # Spherical particles
     sp = []
-    for i in range(len(self.sp_list)):
-        if (self.sp_list[i] in species_gas): 
-            sp.append(self.sp_list[i])
+    for i in range(len(self.Group('SP')['list'])):
+        if (self.Group('SP')['list'][i] in species_gas): 
+            sp.append(self.Group('SP')['list'][i])
     species_gas = list(set(species_gas) - set(sp))
 
     # Aggregates
     agg = []
-    for i in range(len(self.agg_list)):
-        if (self.agg_list[i] in species_gas): 
-            agg.append(self.agg_list[i])
+    for i in range(len(self.Group('AGG')['list'])):
+        if (self.Group('AGG')['list'][i] in species_gas): 
+            agg.append(self.Group('AGG')['list'][i])
     species_gas = list(set(species_gas) - set(agg))
     
     # Fixed gas species

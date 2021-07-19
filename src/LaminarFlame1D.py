@@ -112,6 +112,12 @@ class LaminarFlame1D:
     Omega = np.reshape(Omega, (npts,kin.ns))
     Omega = np.float32(Omega)
     
+    # Reaction rates (molar units, kmol/m3/s)
+    rr = root.find('reaction-rates')
+    rr = (rr.text).split()
+    rr = np.reshape(rr, (npts,kin.nr))
+    rr = np.float32(rr)
+    
     
     # Reconstruct mixture fractions
     X_atoms = X.dot(kin.atomic)
@@ -131,19 +137,19 @@ class LaminarFlame1D:
 
     
     # Reconstruct soot relevant variables: mass fractions
-    agg_Y = np.sum(Y[:,kin.agg_indices], axis=1)
-    sp_Y = np.sum(Y[:,kin.sp_indices], axis=1)
-    pahlp_Y = np.sum(Y[:,kin.pahlp_indices], axis=1)
-    pah34_Y = np.sum(Y[:,kin.pah34_indices], axis=1)
-    pah12_Y = np.sum(Y[:,kin.pah12_indices], axis=1)
+    agg_Y = np.sum(Y[:,kin.Group('AGG')['indices']], axis=1)
+    sp_Y = np.sum(Y[:,kin.Group('SP')['indices']], axis=1)
+    pahlp_Y = np.sum(Y[:,kin.Group('PAHLP')['indices']], axis=1)
+    pah34_Y = np.sum(Y[:,kin.Group('PAH34')['indices']], axis=1)
+    pah12_Y = np.sum(Y[:,kin.Group('PAH12')['indices']], axis=1)
     soot_Y = sp_Y + agg_Y
     
     # Reconstruct soot relevant variables: mole fractions
-    agg_X = np.sum(X[:,kin.agg_indices], axis=1)
-    sp_X = np.sum(X[:,kin.sp_indices], axis=1)
-    pahlp_X = np.sum(X[:,kin.pahlp_indices], axis=1)
-    pah34_X = np.sum(X[:,kin.pah34_indices], axis=1)
-    pah12_X = np.sum(X[:,kin.pah12_indices], axis=1)    
+    agg_X = np.sum(X[:,kin.Group('AGG')['indices']], axis=1)
+    sp_X = np.sum(X[:,kin.Group('SP')['indices']], axis=1)
+    pahlp_X = np.sum(X[:,kin.Group('PAHLP')['indices']], axis=1)
+    pah34_X = np.sum(X[:,kin.Group('PAH34')['indices']], axis=1)
+    pah12_X = np.sum(X[:,kin.Group('PAH12')['indices']], axis=1)    
     soot_X = sp_X + agg_X
 
     # Reconstruct soot relevant variables: volume fraction
@@ -153,13 +159,13 @@ class LaminarFlame1D:
     
     
     # Relevant (possible) variables for progress variable construction
-    Y_over_MW_pah12 = np.sum(Y[:,kin.pah12_indices]/kin.pah12_mws, axis=1)
-    Y_over_MW_pah34 = np.sum(Y[:,kin.pah34_indices]/kin.pah34_mws, axis=1)
-    Y_over_MW_pahlp = np.sum(Y[:,kin.pahlp_indices]/kin.pahlp_mws, axis=1)
+    Y_over_MW_pah12 = np.sum(Y[:,kin.Group('PAH12')['indices']]/kin.Group('PAH12')['mws'], axis=1)
+    Y_over_MW_pah34 = np.sum(Y[:,kin.Group('PAH34')['indices']]/kin.Group('PAH34')['mws'], axis=1)
+    Y_over_MW_pahlp = np.sum(Y[:,kin.Group('PAHLP')['indices']]/kin.Group('PAHLP')['mws'], axis=1)
     
-    Omega_over_MW_pah12 = np.sum(Omega[:,kin.pah12_indices]/kin.pah12_mws, axis=1)
-    Omega_over_MW_pah34 = np.sum(Omega[:,kin.pah34_indices]/kin.pah34_mws, axis=1)
-    Omega_over_MW_pahlp = np.sum(Omega[:,kin.pahlp_indices]/kin.pahlp_mws, axis=1)
+    Omega_over_MW_pah12 = np.sum(Omega[:,kin.Group('PAH12')['indices']]/kin.Group('PAH12')['mws'], axis=1)
+    Omega_over_MW_pah34 = np.sum(Omega[:,kin.Group('PAH34')['indices']]/kin.Group('PAH34')['mws'], axis=1)
+    Omega_over_MW_pahlp = np.sum(Omega[:,kin.Group('PAHLP')['indices']]/kin.Group('PAHLP')['mws'], axis=1)
     
     # Assign internal members
     
@@ -189,6 +195,7 @@ class LaminarFlame1D:
     self.Y = Y
     self.X = X
     self.Omega = Omega
+    self.rr = rr
     
     self.agg_Y = agg_Y
     self.agg_X = agg_X

@@ -26,6 +26,7 @@ sys.path.insert(0, '../src')
 # Import PyTools classes
 from KineticMechanism import KineticMechanism
 from OpenSMOKEppXMLFile import OpenSMOKEppXMLFile
+from PolimiSootModule import *
 from Utilities import *
 
 
@@ -36,6 +37,12 @@ kin_xml_folder_name=folder_github + "CRECK_DiscreteSectionalModel_v2012\\CRECK_2
 kinetics = KineticMechanism(kin_xml_folder_name + "kinetics.xml")
 kinetics.ReadKinetics(kin_xml_folder_name + "reaction_names.xml")
 
+# Create groups
+kinetics.AddGroupOfSpecies('PAH12', 'PAHs with 1/2 aromatic rings', DefaultPAH12())
+kinetics.AddGroupOfSpecies('PAH34', 'PAHs with 3/4 aromatic rings', DefaultPAH34())
+kinetics.AddGroupOfSpecies('PAHLP', 'PAHs with more than 4 aromatic rings (molecular and radical)', DefaultPAHLP(kinetics.species))
+kinetics.AddGroupOfSpecies('SP', 'BIN sections corresponding to spherical particles (molecular and radical)', DefaultSP(kinetics.species))
+kinetics.AddGroupOfSpecies('AGG', 'BIN sections corresponding to aggregates (molecular and radical)', DefaultAGG(kinetics.species))
 
 # Select species to be kept
 species_to_be_kept = [   'BIN21AJ','BIN21BJ','BIN21CJ', 'BIN22AJ','BIN22BJ','BIN22CJ', 'BIN23AJ','BIN23BJ','BIN23CJ', \
