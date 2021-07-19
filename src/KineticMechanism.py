@@ -72,6 +72,9 @@ class KineticMechanism:
     reaction_class_indices = []
     
     kinetics = root.find('Kinetics')
+    
+    nr = int( (kinetics.find('NumberOfReactions')).text )
+    
     polimi_soot_classes = kinetics.find('PolimiSootClasses')
     if (polimi_soot_classes != None):
         
@@ -117,6 +120,7 @@ class KineticMechanism:
     self.species = species
     self.ne = ne
     self.ns = ns
+    self.nr = nr
         
     self.iC = iC
     self.iH = iH

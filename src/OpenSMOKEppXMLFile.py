@@ -65,6 +65,7 @@ class OpenSMOKEppXMLFile:
         if (variable == 'mixture-fraction'):    index_csi = index
         if (variable == 'axial-coordinate'):    index_csi = index
 
+    
     # Read profiles
     profiles_size = root.find('profiles-size')
     profiles_size = (profiles_size.text).split()
