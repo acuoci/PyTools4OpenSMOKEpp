@@ -31,7 +31,7 @@ class OpenSMOKEppXMLFile:
     
     # System type
     systemType = ((root.find('Type')).text).strip()
-    if (systemType != "HomogeneousReactor" and systemType != "Flamelet" and systemType != "Flame1D"):
+    if (systemType != "HomogeneousReactor" and systemType != "Flamelet" and systemType != "Flame1D" and systemType != "Flame2D"):
         print(systemType)
         sys.exit("Unknown system type")
     
@@ -63,8 +63,8 @@ class OpenSMOKEppXMLFile:
         if (variable == 'heat-release'):        index_Q = index
         if (variable == 'csi'):                 index_csi = index
         if (variable == 'mixture-fraction'):    index_csi = index
+        if (variable == 'axial-coordinate'):    index_csi = index
 
-    
     # Read profiles
     profiles_size = root.find('profiles-size')
     profiles_size = (profiles_size.text).split()
@@ -109,6 +109,9 @@ class OpenSMOKEppXMLFile:
     
     if (systemType == 'Flame1D'):
         self.csi = csi
+
+    if (systemType == 'Flame2D'):
+        self.csi = csi
     
     if (systemType == 'Flamelet'):
         self.csi = csi
@@ -125,6 +128,17 @@ class OpenSMOKEppXMLFile:
         f.write( "{:.6E} ".format(self.T[i]) )
         for j in range(self.ns):
             f.write( "{:.6E} ".format(self.Y[i][j]) )
+        f.write('\n')
+
+  def WriteThermophysicalStateAsCVS(self, additional, f):
+  
+    for i in range(self.npts):
+        for add in additional:
+            f.write( add+"," )
+        f.write( "{:.6E},".format(self.csi[i]) )
+        f.write( "{:.6E}".format(self.T[i]) )
+        for j in range(self.ns):
+            f.write( ",{:.6E}".format(self.Y[i][j]) )
         f.write('\n')
         
         
