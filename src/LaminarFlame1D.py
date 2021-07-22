@@ -114,9 +114,12 @@ class LaminarFlame1D:
     
     # Reaction rates (molar units, kmol/m3/s)
     rr = root.find('reaction-rates')
-    rr = (rr.text).split()
-    rr = np.reshape(rr, (npts,kin.nr))
-    rr = np.float32(rr)
+    if rr is None:
+        print('no reaction-rates available in the xml file')
+    else:
+        rr = (rr.text).split()
+        rr = np.reshape(rr, (npts,kin.nr))
+        rr = np.float32(rr)
     
     
     # Reconstruct mixture fractions
