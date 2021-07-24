@@ -37,11 +37,16 @@ def PrintMainLookupTable(kinetics, flames, alpha, output_folder):
     comment = ET.Comment('Example of lookup table')
     opensmoke.append(comment)
 
+    n_alpha_effective = 0
+    for i in range(len(alpha)):
+        if (alpha[i][1] > 0.): n_alpha_effective = n_alpha_effective+1;
+
     Y_definition = ET.SubElement(opensmoke, 'ProgressVariableDefinition')
     dummy = '\n'
-    dummy = dummy + str(len(alpha)) + '\n'
+    dummy = dummy + str(n_alpha_effective) + '\n'
     for i in range(len(alpha)):
-        dummy = dummy + alpha[i][0] + ' ' + str(alpha[i][1]) + '\n'
+        if (alpha[i][1] > 0.):
+            dummy = dummy + alpha[i][0] + ' ' + str(alpha[i][1]) + '\n'
     Y_definition.text = str(dummy)
     
     # Fuel composition
