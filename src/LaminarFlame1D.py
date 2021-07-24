@@ -165,10 +165,14 @@ class LaminarFlame1D:
     Y_over_MW_pah12 = np.sum(Y[:,kin.Group('PAH12')['indices']]/kin.Group('PAH12')['mws'], axis=1)
     Y_over_MW_pah34 = np.sum(Y[:,kin.Group('PAH34')['indices']]/kin.Group('PAH34')['mws'], axis=1)
     Y_over_MW_pahlp = np.sum(Y[:,kin.Group('PAHLP')['indices']]/kin.Group('PAHLP')['mws'], axis=1)
+    Y_over_MW_sp    = np.sum(Y[:,kin.Group('SP')['indices']]/kin.Group('SP')['mws'], axis=1)
+    Y_over_MW_agg   = np.sum(Y[:,kin.Group('AGG')['indices']]/kin.Group('AGG')['mws'], axis=1)
     
     Omega_over_MW_pah12 = np.sum(Omega[:,kin.Group('PAH12')['indices']]/kin.Group('PAH12')['mws'], axis=1)
     Omega_over_MW_pah34 = np.sum(Omega[:,kin.Group('PAH34')['indices']]/kin.Group('PAH34')['mws'], axis=1)
     Omega_over_MW_pahlp = np.sum(Omega[:,kin.Group('PAHLP')['indices']]/kin.Group('PAHLP')['mws'], axis=1)
+    Omega_over_MW_sp = np.sum(Omega[:,kin.Group('SP')['indices']]/kin.Group('SP')['mws'], axis=1)
+    Omega_over_MW_agg = np.sum(Omega[:,kin.Group('AGG')['indices']]/kin.Group('AGG')['mws'], axis=1)
     
     # Assign internal members
     
@@ -220,11 +224,14 @@ class LaminarFlame1D:
     self.Y_over_MW_pah12 = Y_over_MW_pah12
     self.Y_over_MW_pah34 = Y_over_MW_pah34
     self.Y_over_MW_pahlp = Y_over_MW_pahlp
+    self.Y_over_MW_sp = Y_over_MW_sp
+    self.Y_over_MW_agg = Y_over_MW_agg
     
     self.Omega_over_MW_pah12 = Omega_over_MW_pah12
     self.Omega_over_MW_pah34 = Omega_over_MW_pah34
     self.Omega_over_MW_pahlp = Omega_over_MW_pahlp
-    
+    self.Omega_over_MW_sp = Omega_over_MW_sp
+    self.Omega_over_MW_agg = Omega_over_MW_agg    
     
   def minmax_progress_variable(self):
 
@@ -250,6 +257,14 @@ class LaminarFlame1D:
         elif (alpha[i][0] == 'PAHLP'): 
             self.y = self.y + alpha[i][1] * self.Y_over_MW_pahlp
             self.Omegay = self.Omegay + alpha[i][1] * self.Y_over_MW_pahlp
+            
+        elif (alpha[i][0] == 'SP'): 
+            self.y = self.y + alpha[i][1] * self.Y_over_MW_sp
+            self.Omegay = self.Omegay + alpha[i][1] * self.Y_over_MW_sp
+            
+        elif (alpha[i][0] == 'AGG'): 
+            self.y = self.y + alpha[i][1] * self.Y_over_MW_agg
+            self.Omegay = self.Omegay + alpha[i][1] * self.Y_over_MW_agg
         
         else:
             index = kin.species.index(alpha[i][0])
@@ -328,4 +343,10 @@ class LaminarFlame1D:
     self.pah34_int_Z = f(self.Z_grid) 
     f = interpolate.interp1d(self.Z, self.pah12_Y)
     self.pah12_int_Z = f(self.Z_grid)
+    
+    # Soot particles and aggregates
+    f = interpolate.interp1d(self.Z, self.sp_Y)
+    self.sp_int_Z = f(self.Z_grid)
+    f = interpolate.interp1d(self.Z, self.agg_Y)
+    self.agg_int_Z = f(self.Z_grid)
     
